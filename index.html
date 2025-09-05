@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard CRTs - Goiás | COREN-GO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        danger: '#EF4444'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <!-- Header -->
+    <header class="bg-primary text-white py-6 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col sm:flex-row items-center justify-between">
+                <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+                    <i class="fas fa-user-nurse text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold">Dashboard CRTs - Goiás</h1>
+                        <p class="text-blue-100 text-sm">Análise Estatística dos Certificados de Responsabilidade Técnica</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-blue-100 text-sm">COREN-GO</p>
+                    <p class="text-blue-100 text-xs">Atualizado em 2025</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Métricas Resumidas -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-primary">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-primary/10 text-primary">
+                        <i class="fas fa-certificate text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total de CRTs</p>
+                        <p class="text-2xl font-bold" id="totalCrts">1.764</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-secondary">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-secondary/10 text-secondary">
+                        <i class="fas fa-city text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Municípios Ativos</p>
+                        <p class="text-2xl font-bold" id="activeMunicipios">246</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-accent">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-accent/10 text-accent">
+                        <i class="fas fa-crown text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Maior Concentração</p>
+                        <p class="text-lg font-bold">Goiânia</p>
+                        <p class="text-sm text-gray-500">406 CRTs (25%)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border-l-4 border-danger">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-danger/10 text-danger">
+                        <i class="fas fa-exclamation-triangle text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Municípios Sem CRT</p>
+                        <p class="text-2xl font-bold">41</p>
+                        <p class="text-sm text-gray-500">14% do total</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos Principais -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Top 15 Municípios -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-chart-bar text-primary mr-2"></i>
+                        Top 15 Municípios
+                    </h2>
+                    <span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
+                        78% dos CRTs
+                    </span>
+                </div>
+                <div class="relative h-96">
+                    <canvas id="topMunicipiosChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Distribuição por Faixas -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <i class="fas fa-chart-pie text-secondary mr-2"></i>
+                        Distribuição por Faixas
+                    </h2>
+                </div>
+                <div class="relative h-96">
+                    <canvas id="distribuicaoChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Análise de Concentração -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-chart-line text-accent mr-2"></i>
+                    Análise de Concentração Regional
+                </h2>
+                <div class="relative h-80">
+                    <canvas id="concentracaoChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Estatísticas Detalhadas -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold mb-6 flex items-center">
+                    <i class="fas fa-analytics text-primary mr-2"></i>
+                    Estatísticas
+                </h2>
+                <div class="space-y-4">
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Média por Município</p>
+                        <p class="text-lg font-bold text-secondary">7.7 CRTs</p>
+                    </div>
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Top 3 Concentram</p>
+                        <p class="text-lg font-bold text-accent">35% dos CRTs</p>
+                    </div>
+                    <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Municípios com 1 CRT</p>
+                        <p class="text-lg font-bold text-primary">64 municípios</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Cobertura Estadual</p>
+                        <p class="text-lg font-bold text-secondary">86%</p>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                            <div class="bg-secondary h-2 rounded-full" style="width: 86%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela Detalhada -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <h2 class="text-xl font-bold flex items-center mb-4 sm:mb-0">
+                    <i class="fas fa-table text-primary mr-2"></i>
+                    Ranking Detalhado dos Municípios
+                </h2>
+                <div class="flex space-x-2">
+                    <button onclick="filterTable('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Todos
+                    </button>
+                    <button onclick="filterTable('high')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        ≥ 20 CRTs
+                    </button>
+                    <button onclick="filterTable('medium')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        10-19 CRTs
+                    </button>
+                    <button onclick="filterTable('low')" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        1-9 CRTs
+                    </button>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Posição</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Município</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">CRTs</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">% do Total</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Categoria</th>
+                        </tr>
+                    </thead>
+                    <tbody id="municipiosTable" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Será preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Detectar tema escuro
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Dados dos municípios
+        const municipiosData = [
+            { nome: 'Goiânia', crts: 406 },
+            { nome: 'Anápolis', crts: 110 },
+            { nome: 'Rio Verde', crts: 59 },
+            { nome: 'Aparecida de Goiânia', crts: 56 },
+            { nome: 'Trindade', crts: 51 },
+            { nome: 'Mineiros', crts: 48 },
+            { nome: 'Valparaíso de Goiás', crts: 38 },
+            { nome: 'Senador Canedo', crts: 35 },
+            { nome: 'Catalão', crts: 34 },
+            { nome: 'Goianésia', crts: 33 },
+            { nome: 'Formosa', crts: 28 },
+            { nome: 'Quirinópolis', crts: 28 },
+            { nome: 'Planaltina', crts: 26 },
+            { nome: 'Goianira', crts: 25 },
+            { nome: 'Caldas Novas', crts: 24 },
+            { nome: 'Jataí', crts: 22 },
+            { nome: 'Cristalina', crts: 19 },
+            { nome: 'Inhumas', crts: 18 },
+            { nome: 'Luziânia', crts: 18 },
+            { nome: 'Jaraguá', crts: 17 },
+            { nome: 'Ceres', crts: 16 },
+            { nome: 'Itumbiara', crts: 16 },
+            { nome: 'Morrinhos', crts: 16 },
+            { nome: 'Niquelândia', crts: 16 },
+            { nome: 'Hidrolândia', crts: 15 },
+            { nome: 'Uruaçu', crts: 15 },
+            { nome: 'São Luís de Montes Belos', crts: 14 },
+            { nome: 'Nerópolis', crts: 13 },
+            { nome: 'Santa Helena de Goiás', crts: 13 },
+            { nome: 'Goiás', crts: 11 },
+            { nome: 'Iporá', crts: 11 },
+            { nome: 'Águas Lindas de Goiás', crts: 11 },
+            { nome: 'Minaçu', crts: 11 },
+            { nome: 'Pirenópolis', crts: 11 },
+            { nome: 'Pires do Rio', crts: 10 },
+            { nome: 'São Miguel do Araguaia', crts: 10 }
+        ];
+
+        // Configuração dos gráficos
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--tw-prose-body') || '#374151';
+
+        // Gráfico Top 15 Municípios
+        const topMunicipiosCtx = document.getElementById('topMunicipiosChart').getContext('2d');
+        const topMunicipiosChart = new Chart(topMunicipiosCtx, {
+            type: 'bar',
+            data: {
+                labels: municipiosData.slice(0, 15).map(m => m.nome),
+                datasets: [{
+                    label: 'CRTs',
+                    data: municipiosData.slice(0, 15).map(m => m.crts),
+                    backgroundColor: '#5D5CDE',
+                    borderColor: '#4F46E5',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(156, 163, 175, 0.2)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Distribuição por Faixas
+        const distribuicaoCtx = document.getElementById('distribuicaoChart').getContext('2d');
+        const distribuicaoChart = new Chart(distribuicaoCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Alto (≥50)', 'Médio-Alto (20-49)', 'Médio (10-19)', 'Baixo (1-9)', 'Sem CRT (0)'],
+                datasets: [{
+                    data: [6, 9, 21, 175, 35],
+                    backgroundColor: ['#10B981', '#F59E0B', '#5D5CDE', '#8B5CF6', '#EF4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Concentração Regional
+        const concentracaoCtx = document.getElementById('concentracaoChart').getContext('2d');
+        const concentracaoChart = new Chart(concentracaoCtx, {
+            type: 'line',
+            data: {
+                labels: ['Top 1', 'Top 3', 'Top 5', 'Top 10', 'Top 15', 'Top 20', 'Demais'],
+                datasets: [{
+                    label: '% Acumulado de CRTs',
+                    data: [25, 35, 43, 56, 66, 71, 100],
+                    borderColor: '#F59E0B',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#F59E0B',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(156, 163, 175, 0.2)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Função para categorizar municípios
+        function categorizarMunicipio(crts) {
+            if (crts === 0) return { categoria: 'Sem CRT', cor: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' };
+            if (crts >= 50) return { categoria: 'Alto', cor: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' };
+            if (crts >= 20) return { categoria: 'Médio-Alto', cor: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' };
+            if (crts >= 10) return { categoria: 'Médio', cor: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' };
+            return { categoria: 'Baixo', cor: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' };
+        }
+
+        // Preencher tabela
+        function preencherTabela(dados = municipiosData) {
+            const tbody = document.getElementById('municipiosTable');
+            const totalCrts = municipiosData.reduce((sum, m) => sum + m.crts, 0);
+            
+            tbody.innerHTML = dados.map((municipio, index) => {
+                const categoria = categorizarMunicipio(municipio.crts);
+                const percentual = ((municipio.crts / totalCrts) * 100).toFixed(1);
+                
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                            ${index + 1}º
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            ${municipio.nome}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">
+                            ${municipio.crts}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            ${percentual}%
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${categoria.cor}">
+                                ${categoria.categoria}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Função para filtrar tabela
+        function filterTable(tipo) {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            let dadosFiltrados;
+            switch(tipo) {
+                case 'high':
+                    dadosFiltrados = municipiosData.filter(m => m.crts >= 20);
+                    break;
+                case 'medium':
+                    dadosFiltrados = municipiosData.filter(m => m.crts >= 10 && m.crts < 20);
+                    break;
+                case 'low':
+                    dadosFiltrados = municipiosData.filter(m => m.crts >= 1 && m.crts < 10);
+                    break;
+                default:
+                    dadosFiltrados = municipiosData;
+            }
+            preencherTabela(dadosFiltrados);
+        }
+
+        // Estilos para botões de filtro
+        const style = document.createElement('style');
+        style.textContent = `
+            .filter-btn {
+                background-color: #F3F4F6;
+                color: #6B7280;
+            }
+            .filter-btn:hover {
+                background-color: #E5E7EB;
+                color: #374151;
+            }
+            .filter-btn.active {
+                background-color: #5D5CDE;
+                color: white;
+            }
+            .dark .filter-btn {
+                background-color: #374151;
+                color: #9CA3AF;
+            }
+            .dark .filter-btn:hover {
+                background-color: #4B5563;
+                color: #D1D5DB;
+            }
+            .dark .filter-btn.active {
+                background-color: #5D5CDE;
+                color: white;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Inicializar
+        preencherTabela();
+    </script>
+</body>
+</html>
